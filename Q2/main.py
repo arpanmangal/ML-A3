@@ -31,4 +31,5 @@ if __name__ == '__main__':
         print (Y)
         accuracy = NNet.accuracy (Y, predictions)
         print ("Accuracy: ", accuracy)
-        make_confusion_matrix (Y, predictions)
+        # make_confusion_matrix (Y, predictions)
+        NNet.train(X, Y, 5, 0.1)
