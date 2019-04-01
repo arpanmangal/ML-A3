@@ -62,10 +62,10 @@ class NNetwork:
         # print (X[0].shape)
         # trainData = np.array(list(zip(X, Y)))
         # print (trainData.shape)
-        Y = self.getTrueY(trainData)
 
         for e in range(epochs):
             np.random.shuffle(trainData)
+            Y = self.getTrueY(trainData)
             # print (trainData[0])
             # exit(0)
 
@@ -78,8 +78,9 @@ class NNetwork:
 
             accuracy = self.evaluate (trainData, Y)
             print ("Epoch: %d | Accuracy: %.2f" % (e, 100 * accuracy))
-            # print (self.biases)
-            # print (self.weights)
+            # print (self.biases[1])
+            # print (self.weights[1])
+            # exit(0)
 
         predictions = self.predict (trainData)
         accuracy = self.accuracy (Y, predictions)
@@ -160,6 +161,9 @@ class NNetwork:
             #     del_weights[l] += np.matmul (delta.reshape(len(delta), 1), azs[l].reshape(1, len(azs[l])))
 
 
+        # print (del_biases[0])
+        # print (del_weights[0])
+        # exit(0)
         del_biases = [db / len(mini_batch) for db in del_biases]
         del_weights = [dw / len(mini_batch) for dw in del_weights]
 
