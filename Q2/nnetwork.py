@@ -31,31 +31,39 @@ class NNetwork:
         #     print (b)
         # for w in self.weights:
         #     print (w)
+        # exit(0)
 
 
-    def predict (self, X):
+    def predict (self, data):
         def predict_single (x):
             return np.argmax(self.feedforward(x))
-        return np.array(list(map(predict_single, X)))
 
-    def feedforward (self, input):
+        return np.array([predict_single(x) for x, y in data])
+        # return np.array(list(map(predict_single, X)))
+
+    def feedforward (self, a):
         # Run the neural network on the input and reuturn the output
-        a = input
+        # print (input.shape)
+        # exit(0)
+        # a = input.reshape(len(input), 1)
         for b, w in zip(self.biases, self.weights):
             z = np.matmul(w, a) + b
+            # print (a.shape, z.shape, w.shape, b.shape)
             a = self.sigmoid(z)
-
+        # exit(0)
         return a
 
 
-    def train (self, X, Y, epochs, eta):
+    def train (self, trainData, epochs, eta):
         # Y = Y.reshape(len(Y), 1)
         # print (Y.shape)
         # print (Y)
         # print (X.shape)
         # print (X[0].shape)
-        trainData = np.array(list(zip(X, Y)))
-        print (trainData.shape)
+        # trainData = np.array(list(zip(X, Y)))
+        # print (trainData.shape)
+        Y = self.getTrueY(trainData)
+
         for e in range(epochs):
             np.random.shuffle(trainData)
 
@@ -66,13 +74,16 @@ class NNetwork:
             for mini_batch in mini_batches:
                 self.MBGD (mini_batch, eta)
 
-            accuracy = self.evaluate (X, Y)
+            accuracy = self.evaluate (trainData, Y)
             print ("Epoch: %d | Accuracy: %.2f" % (e, 100 * accuracy))
             # print (self.biases)
             # print (self.weights)
 
-        X, Y = zip(*trainData)
-        predictions = self.predict (X)
+        predictions = self.predict (trainData)
+        accuracy = self.accuracy (Y, predictions)
+        print ("Accuracy: ", accuracy)
+        # X, Y = zip(*trainData)
+        # predictions = self.predict (X)
         make_confusion_matrix (Y, predictions)
 
 
@@ -87,7 +98,9 @@ class NNetwork:
 
         for x, y in mini_batch:
             # Do a feedforward and compute z and delta for each layer
-            x = x.reshape(len(x), 1)
+            # print (x.shape, y.shape)
+            # exit(0)
+            # x = x.reshape(len(x), 1)
             zs = [] # Set of z's
             azs = [] # Set of a's
             a = x
@@ -95,26 +108,30 @@ class NNetwork:
             for b, w in zip(self.biases, self.weights):
                 # print (w.shape, a.shape, b.shape)
                 z = np.matmul(w, a) + b
-                print (z.shape, w.shape, a.shape, b.shape)
+                # print (z.shape, w.shape, a.shape, b.shape)
                 zs.append(z)
                 a = self.sigmoid(z)
                 azs.append (a)
                 # print (b.shape, z.shape, a.shape)
-
-            print (zs)
-            exit(0)
-
+            # print (a.shape, y.shape, a, y)
+            # exit(0)
             # Do a backpropogate
             gradient_C = (a - y)
             delta = np.multiply (gradient_C, self.sigmoid_prime(zs[-1]))
             del_biases[-1] += delta
-            del_weights[-1] += np.matmul (delta.reshape(len(delta), 1), azs[-2].reshape(1, len(azs[-2])))
+            del_weights[-1] += np.matmul (delta, azs[-2].transpose())
+            # del_weights[-1] += np.matmul (delta.reshape(len(delta), 1), azs[-2].reshape(1, len(azs[-2])))
 
+            # print (delta.shape, del_biases[-1].shape, del_weights[-1].shape)
             for l in range (2, self.L + 1):
                 sp = self.sigmoid_prime(z[-1])
                 delta = np.matmul (self.weights[-l + 1].transpose(), delta) * sp
                 del_biases[-l] += delta
-                del_weights[-l] += np.matmul (delta.reshape(len(delta), 1), azs[-l-1].reshape(1, len(azs[-l-1])))
+                # print (azs[-l-1].shape, delta.shape, del_weights[-l].shape)
+                del_weights[-l] += np.matmul ( delta, azs[-l-1].transpose() )
+                # del_weights[-l] += np.matmul (delta.reshape(len(delta), 1), azs[-l-1].reshape(1, len(azs[-l-1])))
+                # print (azs[-l-1].shape, delta.shape, del_biases[-l].shape, del_weights[-l].shape)
+            # exit(0)
 
             # for l in range (self.L - 2, -1, -1):
             #     delta = np.multiply( (np.matmul(np.transpose(self.weights[l+1]), deltas[l+1])), self.sigmoid_prime(z[l]))
@@ -130,10 +147,13 @@ class NNetwork:
 
 
     # Other Functions
-    def evaluate (self, X, Y):
-        predictions = self.predict (X)
+    def evaluate (self, data, Y):
+        predictions = self.predict (data)
         accuracy = self.accuracy (Y, predictions)
         return accuracy
+
+    def getTrueY (self, data):
+        return np.array([np.argmax(y) for x, y in data])
 
     def accuracy (self, trueY, predictions):
         return np.sum(trueY == predictions) / len(trueY)
