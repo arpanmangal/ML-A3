@@ -2,6 +2,7 @@
 Module for reading in the data
 """
 
+import sys
 import numpy as np
 from tqdm import tqdm
 
@@ -46,8 +47,6 @@ def read_one_hot_data (datafile):
     data = []
     for line in tqdm(read_raw_data (datafile, delimeter=' ')):
         data.append(line)
-        # X.append(data[:-1])
-        # Y.append(data[-1])
 
     data = np.array(data)
     np.random.seed(0) # Deterministically random
@@ -56,9 +55,10 @@ def read_one_hot_data (datafile):
     X = data[:, :-1]
     Y = data[:, -1]
 
-    print (X)
-    print (Y)
-    return X, Y
+    X = [x.reshape(len(x), 1) for x in data[:,:-1]]
+    Y = [np.array(convert_one_hot(y+1, 10)).reshape(10, 1) for y in data[:,-1]]
+
+    return list(zip(X, Y))
 
 
 def read_raw_data (datafile, delimeter=','):
