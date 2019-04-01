@@ -66,6 +66,8 @@ class NNetwork:
 
         for e in range(epochs):
             np.random.shuffle(trainData)
+            # print (trainData[0])
+            # exit(0)
 
             mini_batches = [
                 trainData[k:k+self.batch_size]
@@ -97,6 +99,11 @@ class NNetwork:
         del_weights = [np.zeros(w.shape) for w in self.weights]
 
         for x, y in mini_batch:
+            # print (x)
+            # print (y)
+            # print (self.biases[0])
+            # print (self.weights[0])
+            # exit(0)
             # Do a feedforward and compute z and delta for each layer
             # print (x.shape, y.shape)
             # exit(0)
@@ -108,29 +115,43 @@ class NNetwork:
             for b, w in zip(self.biases, self.weights):
                 # print (w.shape, a.shape, b.shape)
                 z = np.matmul(w, a) + b
+                # print (z)
+                # exit(0)
                 # print (z.shape, w.shape, a.shape, b.shape)
                 zs.append(z)
                 a = self.sigmoid(z)
                 azs.append (a)
                 # print (b.shape, z.shape, a.shape)
             # print (a.shape, y.shape, a, y)
+            # print (a)
             # exit(0)
             # Do a backpropogate
             gradient_C = (a - y)
             delta = np.multiply (gradient_C, self.sigmoid_prime(zs[-1]))
             del_biases[-1] += delta
             del_weights[-1] += np.matmul (delta, azs[-2].transpose())
+            # print (delta)
+            # print (del_weights)
+            # exit(0)
             # del_weights[-1] += np.matmul (delta.reshape(len(delta), 1), azs[-2].reshape(1, len(azs[-2])))
 
             # print (delta.shape, del_biases[-1].shape, del_weights[-1].shape)
             for l in range (2, self.L + 1):
-                sp = self.sigmoid_prime(z[-1])
+                # print ('$', l)
+                # print (zs[-l].shape)
+                sp = self.sigmoid_prime(zs[-l])
+                # print (sp)
                 delta = np.matmul (self.weights[-l + 1].transpose(), delta) * sp
                 del_biases[-l] += delta
                 # print (azs[-l-1].shape, delta.shape, del_weights[-l].shape)
                 del_weights[-l] += np.matmul ( delta, azs[-l-1].transpose() )
                 # del_weights[-l] += np.matmul (delta.reshape(len(delta), 1), azs[-l-1].reshape(1, len(azs[-l-1])))
                 # print (azs[-l-1].shape, delta.shape, del_biases[-l].shape, del_weights[-l].shape)
+                # print (delta)
+                # print (sp)
+
+            # print (del_biases[0])
+            # print (del_weights[0])
             # exit(0)
 
             # for l in range (self.L - 2, -1, -1):
@@ -164,4 +185,7 @@ class NNetwork:
 
     def sigmoid_prime (self, z):
         sig = self.sigmoid (z)
-        return np.multiply(sig, 1-sig)
+        # print (sig.shape)
+        sp = np.multiply(sig, 1-sig)
+        # print (sp.shape)
+        return sp
