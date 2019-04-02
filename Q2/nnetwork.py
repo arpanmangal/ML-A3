@@ -5,18 +5,19 @@ import numpy as np
 from plot import make_confusion_matrix
 
 class NNetwork:
-    def __init__ (self, num_input, sizes, num_output, batch_size):
-        self.sizes = sizes
+    def __init__ (self, num_input, sizes, num_output, batch_size, useRELU=False):
+        self.sizes = sizes[:]
         self.sizes.append (num_output)
         self.sizes.insert(0, num_input)
         self.batch_size = batch_size
+        self.useRELU = useRELU
 
-        self.L = len(sizes) - 1
+        self.L = len(self.sizes) - 1
 
         # Make the Weight and Biases vectors for each layer
-        self.biases = [np.random.randn(currSize, 1) for currSize in sizes[1:]]
-        self.weights = [np.random.randn(currSize, prevSize) for currSize, prevSize in zip(sizes[1:], sizes[:-1])]
-            
+        self.biases = [np.random.randn(currSize, 1) for currSize in self.sizes[1:]]
+        self.weights = [np.random.randn(currSize, prevSize) for currSize, prevSize in zip(self.sizes[1:], self.sizes[:-1])]
+        
 
     def predict (self, data):
         def predict_single (x):
@@ -32,7 +33,7 @@ class NNetwork:
         return a
 
 
-    def train (self, trainData, epochs, eta, silent=False):
+    def train (self, trainData, eta, silent=False, max_epochs=1000, adaptive_eta=False):
         accuracies = []
         losses = []
 
@@ -44,7 +45,7 @@ class NNetwork:
         if (not silent):
             print ("Epoch: %d | Accuracy: %.3f | Loss: %.6f" % (0, accuracy, loss))
 
-        for e in range(epochs):
+        for e in range(max_epochs):
             np.random.shuffle(trainData)
             Y = self.getTrueY(trainData)
 
@@ -54,14 +55,23 @@ class NNetwork:
             ]
             for mini_batch in mini_batches:
                 self.MBGD (mini_batch, eta)
-
+            
             accuracy = self.evaluate (trainData, Y) * 100
             loss = self.loss(trainData)
             accuracies.append(accuracy)
             losses.append(loss)
             if (not silent):
-                print ("Epoch: %d | Accuracy: %.3f | Loss: %.6f" % (e+1, accuracy, loss))
-        
+                print ("Epoch: %d | Accuracy: %.3f | Loss: %.6f | Eta: %.3f" % (e+1, accuracy, loss, eta))
+
+            # Convergence / Divergence Criterion
+            if (abs(losses[-1] - losses[-2]) <= 1e-5) or (losses[-1] - losses[-2] >= 0.1):
+                break
+
+            if adaptive_eta:
+                loss_increase = losses[-1] - losses[-2]
+                if ( loss_increase >= 0 and loss_increase < 1e-4 ):
+                    eta /= 5
+            
         return accuracies, losses
 
 
@@ -124,9 +134,15 @@ class NNetwork:
 
     # Helper Functions
     def sigmoid (self, z):
-        return 1.0 / (1.0 + np.exp(-z))
+        if (self.useRELU):
+            return np.maximum(0, z)
+        else:
+            return 1.0 / (1.0 + np.exp(-z))
 
     def sigmoid_prime (self, z):
-        sig = self.sigmoid (z)
-        sp = np.multiply(sig, 1-sig)
-        return sp
+        if (self.useRELU):
+            return (z > 0).astype(int)
+        else:
+            sig = self.sigmoid (z)
+            sp = np.multiply(sig, 1-sig)
+            return sp
