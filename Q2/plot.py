@@ -59,26 +59,22 @@ def plot_confusion_matrix(y_true, y_pred, classes,
     return ax
 
 
-def make_confusion_matrix (trueY, predictions, fileName="Q2/plots/confusion.png"):
+def make_confusion_matrix (trueY, predictions, fileName="Q2/plots/confusion.png", show=True):
     np.set_printoptions(precision=2)
     # Plot non-normalized confusion matrix
     plot_confusion_matrix(trueY, predictions, classes=class_names,
-                        title='Confusion matrix, without normalization')
-
-    # Plot normalized confusion matrix
-    # plot_confusion_matrix(trueY, predictions, classes=class_names, normalize=True,
-    #                     title='Normalized confusion matrix')
+                        title='Confusion Matrix')
 
     plt.savefig(fileName)
     plt.show()
 
 
-def make_line_curve (Y, Xlabel="X", Ylabel="Y", marker="g-", fileName="Q2/plots/sample.png", title="Line Plot", miny=None, maxy=None):
-    X = [int(x) for x in range(len(Y))]
+def make_line_curve (Y, X=None, Xlabel="X", Ylabel="Y", marker="g-", fileName="Q2/plots/sample.png", title="Line Plot", miny=None, maxy=None):
+    if X is None:
+        X = [int(x) for x in range(len(Y))]
     fig = plt.figure(1)
     plt.plot(X, Y, marker)
     plt.title(title)
-    # plt.title("Please close the figure for next figure", fontsize=6)
     plt.ylabel(Ylabel)
     plt.xlabel(Xlabel)
     plt.xlim(left=0)

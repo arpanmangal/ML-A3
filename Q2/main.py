@@ -4,9 +4,9 @@ Main Controller
 
 
 import sys
+import time
 from read import *
 from nnetwork import NNetwork
-from network import Network #!!!!!!!!!!!!!!!!!!!!!
 from plot import make_confusion_matrix, make_line_curve
 
 def vectorized_result(j):
@@ -18,6 +18,20 @@ def vectorized_result(j):
     e[j] = 1.0
     return e
 
+
+def evaluate_model (NNet, data, print_accuracy=True, show_conf_matrix=True, savePath="Q2/plots/confusionMatrix.png"):
+    # Evaluate the learned model on the data
+    # Plot the confusion matrix
+    Y = NNet.getTrueY(data)
+    predictions = NNet.predict (data)
+    accuracy = NNet.accuracy (Y, predictions) * 100
+    if print_accuracy:
+        print ("Final Accuracy: %.2f %%" % accuracy)
+    make_confusion_matrix (Y, predictions, fileName=savePath, show=show_conf_matrix)
+
+    return accuracy
+        
+
 if __name__ == '__main__':
     if (len(sys.argv) < 2):
         print ("Go Away")
@@ -28,47 +42,60 @@ if __name__ == '__main__':
         gen_one_hot_data ('data/poker/poker-hand-training.data', 'data/poker/train.data')
         gen_one_hot_data ('data/poker/poker-hand-testing.data', 'data/poker/test.data')
 
-    if (sys.argv[1] == 'b'):
+    elif (sys.argv[1] == 'b'):
         # Read the data
         data = read_one_hot_data ('data/poker/train.data')
 
         # Train the neural network
+        start_time = time.time()
         NNet = NNetwork (85, [20], 10, 1)
-        # predictions = NNet.predict (data)
-        # print (predictions)
-        # print (Y[:10])
-        # print (Y)
-        # exit(0)
-        # accuracy = NNet.accuracy (Y, predictions)
-        # print ("Accuracy: ", accuracy)
-        # make_confusion_matrix (Y, predictions)
-        # exit(0)
-        # NNet.train(data, 10, 0.03)
-        accuracies, losses = NNet.train(data, 100, 0.1)
-        # print (accuracies)
-        # print (losses)
+        accuracies, losses = NNet.train(data, 2, 0.1)
+        print ("Training time: %.2f secs" % (time.time() - start_time))
 
         make_line_curve (accuracies, Xlabel="Epochs", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/accuracy.png", title="Accuracy vs. #Epochs", miny=0, maxy=100)
         make_line_curve (losses, Xlabel="Epochs", Ylabel="Loss", marker='m-', fileName="Q2/plots/loss.png", title="Loss vs. #Epochs", miny=0)
 
-        Y = NNet.getTrueY(data)
-        predictions = NNet.predict (data)
-        accuracy = NNet.accuracy (Y, predictions)
-        print ("Final Accuracy: ", accuracy)
-        make_confusion_matrix (Y, predictions, fileName="Q2/plots/confusionMatrix.png")
-        exit(0)
+        evaluate_model (NNet, data, savePath="Q2/plots/confusionMatrix.png")
 
-    if (sys.argv[1] == 'c'):
+    elif (sys.argv[1] == 'c'):
+        # Experiments with single hidden layers
+        eta = 0.1
+        hidden_units = [5, 10, 15, 20, 25]
+
         # Read the data
-        data = read_one_hot_data ('data/poker/train.data')
-        # print (X.shape, Y.shape)
-        # data = [(x.reshape(85, 1), vectorized_result(y)) for x, y in zip (X, Y)]
+        trainData = read_one_hot_data ('data/poker/train.data')
+        # testData = read_one_hot_data ('data/poker/test.data')
 
-        # Train the neural network
-        Net = Network ([85, 20, 20, 10])
-        accuracy = Net.evaluate(data) / len(data)
-        print (accuracy)
-        Net.SGD(data, 10, 100, 0.1, data)
+        # The metrics
+        testAccuracies = []
+        trainAccuracies = []
+        trainingTimes = []
+        for size in hidden_units:
+            # Train the neural network
+            start_time = time.time()
+            NNet = NNetwork (85, [size], 10, 1)
+            accuracies, losses = NNet.train(trainData, 1, 0.1, silent=True)
+            trainingTimes.append(time.time() - start_time)
+            print ("Size %d done | Time Take: %.2f secs" % (size, time.time() -start_time))
 
-    if (sys.argv[1] == 't'):
-        make_line_curve ([10,2,-4,4,5,2], marker='m-', miny=2, maxy=4)
+            save_conf_matrix = "Q2/plots/confMatrix-c-" + str(size)
+            trainAcc = evaluate_model (NNet, trainData, print_accuracy=False, show_conf_matrix=False, savePath=save_conf_matrix)
+            trainAccuracies.append(trainAcc)
+
+        print (trainingTimes)
+        print (trainAccuracies)
+
+        make_line_curve (trainAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartCTrainAcc.png", title="Training Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
+        make_line_curve (trainingTimes, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Time (secs)", marker='g-', fileName="Q2/plots/PartCTrainTime.png", title="Training time vs. Size of Hidden Layer")
+
+
+    elif (sys.argv[1] == 't'):
+        # make_line_curve ([10,2,-4,4,5,2], marker='m-', miny=2, maxy=4)
+        
+        hidden_units = [5, 10, 15, 20, 25]
+        trainAccuracies = [43.00279888044783, 46.0375849660136, 49.95201919232307, 49.8360655737705, 47.76489404238305]
+        make_line_curve (trainAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartCTrainAcc.png", title="Training Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
+
+    else:
+        print ("Go Away")
+        exit(1)

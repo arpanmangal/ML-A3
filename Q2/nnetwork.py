@@ -32,7 +32,7 @@ class NNetwork:
         return a
 
 
-    def train (self, trainData, epochs, eta):
+    def train (self, trainData, epochs, eta, silent=False):
         accuracies = []
         losses = []
 
@@ -41,7 +41,8 @@ class NNetwork:
         accuracies.append(accuracy)
         loss = self.loss(trainData)
         losses.append(loss)
-        print ("Epoch: %d | Accuracy: %.2f | Loss: %.2f" % (0, accuracy, loss))
+        if (not silent):
+            print ("Epoch: %d | Accuracy: %.3f | Loss: %.6f" % (0, accuracy, loss))
 
         for e in range(epochs):
             np.random.shuffle(trainData)
@@ -58,7 +59,8 @@ class NNetwork:
             loss = self.loss(trainData)
             accuracies.append(accuracy)
             losses.append(loss)
-            print ("Epoch: %d | Accuracy: %.2f | Loss: %.2f" % (e+1, accuracy, loss))
+            if (not silent):
+                print ("Epoch: %d | Accuracy: %.3f | Loss: %.6f" % (e+1, accuracy, loss))
         
         return accuracies, losses
 
