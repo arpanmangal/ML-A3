@@ -46,6 +46,7 @@ if __name__ == '__main__':
     elif (sys.argv[1] == 'b'):
         # Read the data
         data = read_one_hot_data ('data/poker/train.data')
+        testData = read_one_hot_data ('data/poker/test.data')
 
         # Train the neural network
         start_time = time.time()
@@ -53,10 +54,11 @@ if __name__ == '__main__':
         accuracies, losses = NNet.train(data, 0.1)
         print ("Training time: %.2f secs" % (time.time() - start_time))
 
-        make_line_curve (accuracies, Xlabel="Epochs", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/accuracy.png", title="Accuracy vs. #Epochs", miny=0, maxy=100)
-        make_line_curve (losses, Xlabel="Epochs", Ylabel="Loss", marker='m-', fileName="Q2/plots/loss.png", title="Loss vs. #Epochs", miny=0)
+        make_line_curve (accuracies, Xlabel="Epochs", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartB/accuracy.png", title="Accuracy vs. #Epochs", miny=0, maxy=100)
+        make_line_curve (losses[1:], Xlabel="Epochs", Ylabel="Loss", marker='m-', fileName="Q2/plots/PartB/loss.png", title="Loss vs. #Epochs", miny=0)
 
-        evaluate_model (NNet, data, savePath="Q2/plots/confusionMatrix.png")
+        evaluate_model (NNet, testData, savePath="Q2/plots/PartB/confusionMatrixTest.png")
+        evaluate_model (NNet, data, savePath="Q2/plots/PartB/confusionMatrixTrain.png")
 
     elif (sys.argv[1] == 'c'):
         # Experiments with single hidden layers
@@ -65,7 +67,7 @@ if __name__ == '__main__':
 
         # Read the data
         trainData = read_one_hot_data ('data/poker/train.data')
-        # testData = read_one_hot_data ('data/poker/test.data')
+        testData = read_one_hot_data ('data/poker/test.data')
 
         # The metrics
         testAccuracies = []
@@ -79,15 +81,19 @@ if __name__ == '__main__':
             trainingTimes.append(time.time() - start_time)
             print ("Size %d done | Time Take: %.2f secs" % (size, time.time() -start_time))
 
-            save_conf_matrix = "Q2/plots/confMatrix-c-" + str(size)
+            save_conf_matrix = "Q2/plots/PartC/confMatrix-c-" + str(size)
             trainAcc = evaluate_model (NNet, trainData, conf_matrix=False, savePath=save_conf_matrix)
+            testAcc = evaluate_model (NNet, testData, savePath=save_conf_matrix)
             trainAccuracies.append(trainAcc)
+            testAccuracies.append(testAcc)
 
         print (trainingTimes)
         print (trainAccuracies)
+        print (testAccuracies)
 
-        make_line_curve (trainAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartCTrainAcc.png", title="Training Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
-        make_line_curve (trainingTimes, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Time (secs)", marker='g-', fileName="Q2/plots/PartCTrainTime.png", title="Training time vs. Size of Hidden Layer")
+        make_line_curve (testAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartC/PartCTestAcc.png", title="Test Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
+        make_line_curve (trainAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartC/PartCTrainAcc.png", title="Training Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
+        make_line_curve (trainingTimes, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Time (secs)", marker='g-', fileName="Q2/plots/PartC/PartCTrainTime.png", title="Training time vs. Size of Hidden Layer")
 
     elif (sys.argv[1] == 'd'):
         # Experiments with two hidden layers
@@ -96,7 +102,7 @@ if __name__ == '__main__':
 
         # Read the data
         trainData = read_one_hot_data ('data/poker/train.data')
-        # testData = read_one_hot_data ('data/poker/test.data')
+        testData = read_one_hot_data ('data/poker/test.data')
 
         # The metrics
         testAccuracies = []
@@ -106,19 +112,23 @@ if __name__ == '__main__':
             # Train the neural network
             start_time = time.time()
             NNet = NNetwork (85, size, 10, 1)
-            accuracies, losses = NNet.train(trainData, 0.1, silent=True, max_epochs=5)
+            accuracies, losses = NNet.train(trainData, 0.1, silent=True)
             trainingTimes.append(time.time() - start_time)
             print ("Size %d done | Time Take: %.2f secs" % (size[0], time.time() -start_time))
 
-            save_conf_matrix = "Q2/plots/confMatrix-d-" + str(size[0])
+            save_conf_matrix = "Q2/plots/PartD/confMatrix-d-" + str(size[0])
             trainAcc = evaluate_model (NNet, trainData, conf_matrix=False, savePath=save_conf_matrix)
+            testAcc = evaluate_model (NNet, testData, savePath=save_conf_matrix)
             trainAccuracies.append(trainAcc)
+            testAccuracies.append(testAcc)
 
         print (trainingTimes)
         print (trainAccuracies)
+        print (testAccuracies)
 
-        make_line_curve (trainAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartDTrainAcc.png", title="Training Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
-        make_line_curve (trainingTimes, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Time (secs)", marker='g-', fileName="Q2/plots/PartDTrainTime.png", title="Training time vs. Size of Hidden Layer")
+        make_line_curve (testAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartD/PartDTestAcc.png", title="Test Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
+        make_line_curve (trainAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartD/PartDTrainAcc.png", title="Training Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
+        make_line_curve (trainingTimes, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Time (secs)", marker='g-', fileName="Q2/plots/PartD/PartDTrainTime.png", title="Training time vs. Size of Hidden Layer")
 
     elif (sys.argv[1] == 'e'):
         eta = 0.1
@@ -126,32 +136,33 @@ if __name__ == '__main__':
 
         # Read the data
         trainData = read_one_hot_data ('data/poker/train.data')
-        # testData = read_one_hot_data ('data/poker/test.data')
+        testData = read_one_hot_data ('data/poker/test.data')
 
         # The metrics
         testAccuracies = []
         trainAccuracies = []
         trainingTimes = []
         for size in hidden_units:
-            print (size, size[0])
-            # continue
             # Train the neural network
             start_time = time.time()
             NNet = NNetwork (85, size, 10, 1)
-            accuracies, losses = NNet.train(trainData, 0.1, silent=False, max_epochs=5, adaptive_eta=True)
+            accuracies, losses = NNet.train(trainData, 0.1, silent=False, adaptive_eta=True)
             trainingTimes.append(time.time() - start_time)
             print ("Size %d done | Time Take: %.2f secs" % (size[0], time.time() -start_time))
 
-            save_conf_matrix = "Q2/plots/confMatrix-e-" + str(size[0])
+            save_conf_matrix = "Q2/plots/PartE/confMatrix-e-" + str(size[0])
             trainAcc = evaluate_model (NNet, trainData, conf_matrix=False, savePath=save_conf_matrix)
+            testAcc = evaluate_model (NNet, testData, savePath=save_conf_matrix)
             trainAccuracies.append(trainAcc)
+            testAccuracies.append(testAcc)
 
         print (trainingTimes)
         print (trainAccuracies)
+        print (testAccuracies)
 
-        make_line_curve (trainAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartETrainAcc.png", title="Training Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
-        make_line_curve (trainingTimes, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Time (secs)", marker='g-', fileName="Q2/plots/PartETrainTime.png", title="Training time vs. Size of Hidden Layer")
-    
+        make_line_curve (testAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartE/PartETestAcc.png", title="Test Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
+        make_line_curve (trainAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartE/PartETrainAcc.png", title="Training Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
+        make_line_curve (trainingTimes, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Time (secs)", marker='g-', fileName="Q2/plots/PartE/PartETrainTime.png", title="Training time vs. Size of Hidden Layer")
     
     elif (sys.argv[1] == 'f'):
         eta = 0.1
@@ -159,31 +170,33 @@ if __name__ == '__main__':
 
         # Read the data
         trainData = read_one_hot_data ('data/poker/train.data')
-        # testData = read_one_hot_data ('data/poker/test.data')
+        testData = read_one_hot_data ('data/poker/test.data')
 
         # The metrics
         testAccuracies = []
         trainAccuracies = []
         trainingTimes = []
         for size in hidden_units:
-            print (size, size[0])
-            # continue
             # Train the neural network
             start_time = time.time()
             NNet = NNetwork (85, size, 10, 1, useRELU=True)
-            accuracies, losses = NNet.train(trainData, 0.1, silent=False, max_epochs=5, adaptive_eta=True)
+            accuracies, losses = NNet.train(trainData, 0.1, silent=False, adaptive_eta=True)
             trainingTimes.append(time.time() - start_time)
             print ("Size %d done | Time Take: %.2f secs" % (size[0], time.time() -start_time))
 
-            save_conf_matrix = "Q2/plots/confMatrix-e-" + str(size[0])
+            save_conf_matrix = "Q2/plots/PartF/confMatrix-e-" + str(size[0])
             trainAcc = evaluate_model (NNet, trainData, conf_matrix=False, savePath=save_conf_matrix)
+            testAcc = evaluate_model (NNet, testData, savePath=save_conf_matrix)
             trainAccuracies.append(trainAcc)
+            testAccuracies.append(testAcc)
 
         print (trainingTimes)
         print (trainAccuracies)
+        print (testAccuracies)
 
-        make_line_curve (trainAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartETrainAcc.png", title="Training Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
-        make_line_curve (trainingTimes, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Time (secs)", marker='g-', fileName="Q2/plots/PartETrainTime.png", title="Training time vs. Size of Hidden Layer")
+        make_line_curve (testAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartF/PartFTestAcc.png", title="Training Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
+        make_line_curve (trainAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartF/PartFTrainAcc.png", title="Training Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
+        make_line_curve (trainingTimes, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Time (secs)", marker='g-', fileName="Q2/plots/PartF/PartFTrainTime.png", title="Training time vs. Size of Hidden Layer")
 
     elif (sys.argv[1] == 't'):
         # make_line_curve ([10,2,-4,4,5,2], marker='m-', miny=2, maxy=4)

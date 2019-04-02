@@ -31,7 +31,7 @@ def plot_confusion_matrix(y_true, y_pred, classes,
 
     # print(cm)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(10, 8))
     im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
     ax.figure.colorbar(im, ax=ax)
     # We want to show all ticks...
@@ -65,7 +65,7 @@ def make_confusion_matrix (trueY, predictions, fileName="Q2/plots/confusion.png"
     plot_confusion_matrix(trueY, predictions, classes=class_names,
                         title='Confusion Matrix')
 
-    plt.savefig(fileName)
+    plt.savefig(fileName, dpi=100)
     plt.show()
 
 
