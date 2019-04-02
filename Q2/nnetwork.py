@@ -33,6 +33,16 @@ class NNetwork:
 
 
     def train (self, trainData, epochs, eta):
+        accuracies = []
+        losses = []
+
+        Y = self.getTrueY(trainData)
+        accuracy = self.evaluate (trainData, Y) * 100
+        accuracies.append(accuracy)
+        loss = self.loss(trainData)
+        losses.append(loss)
+        print ("Epoch: %d | Accuracy: %.2f | Loss: %.2f" % (0, accuracy, loss))
+
         for e in range(epochs):
             np.random.shuffle(trainData)
             Y = self.getTrueY(trainData)
@@ -44,13 +54,13 @@ class NNetwork:
             for mini_batch in mini_batches:
                 self.MBGD (mini_batch, eta)
 
-            accuracy = self.evaluate (trainData, Y)
-            print ("Epoch: %d | Accuracy: %.2f" % (e, 100 * accuracy))
-
-        predictions = self.predict (trainData)
-        accuracy = self.accuracy (Y, predictions)
-        print ("Accuracy: ", accuracy)
-        make_confusion_matrix (Y, predictions)
+            accuracy = self.evaluate (trainData, Y) * 100
+            loss = self.loss(trainData)
+            accuracies.append(accuracy)
+            losses.append(loss)
+            print ("Epoch: %d | Accuracy: %.2f | Loss: %.2f" % (e+1, accuracy, loss))
+        
+        return accuracies, losses
 
 
     def MBGD (self, mini_batch, eta):
@@ -103,6 +113,12 @@ class NNetwork:
 
     def accuracy (self, trueY, predictions):
         return np.sum(trueY == predictions) / len(trueY)
+
+    def loss (self, data):
+        loss = 0
+        for x, y in data:
+            loss += np.sum(np.square(self.feedforward(x) - y))
+        return loss / (2 * len(data))
 
     # Helper Functions
     def sigmoid (self, z):
