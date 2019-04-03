@@ -21,8 +21,13 @@ if __name__ == '__main__':
 
     elif (sys.argv[1] == 'a'):
         data = read_data ('data/credit-card/credit-cards.train.processed')
+        
+        features = set()
+        for x in range(1, 24):
+            features.add(x)
+            
         DT = DecisionTree ()
-        Tree = DT.grow_tree (data)
+        Tree = DT.grow_tree (data, features)
         Tree.print_subtree (root=True)
 
     else:
