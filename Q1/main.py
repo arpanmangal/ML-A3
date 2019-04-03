@@ -31,9 +31,10 @@ if __name__ == '__main__':
             
         start_time = time.time()
         DT = DecisionTree ()
-        Tree = DT.grow_tree (data, features)
+        Tree, num_nodes, correct_preds = DT.grow_tree (data, valData, features)
         end_time = time.time()
 
+        print (num_nodes, correct_preds)
         print ("Time Taken: %.2f secs" % (end_time - start_time))
 
         print ("Training Accuracy: %.2f %%" % (100 * DT.evaluate (Tree, data)))

@@ -36,7 +36,7 @@ class DecisionTree:
         self.tree = None
         
 
-    def grow_tree (self, data, immutable_features):
+    def grow_tree (self, data, valData, immutable_features, pruning=True):
         # Last col of data is Y
         # Find the distribution
         features = immutable_features.copy()
@@ -45,29 +45,46 @@ class DecisionTree:
         if (class0 == 0 or class1 == 0):
             # Make this a leaf node
             if (len(data) == 0):
-                return Node ([0.5, 0.5], None, None)
+                distribution = [0.5, 0.5]
             elif (class0 == 0):
-                return Node ([0.0, 1.0], None, None)
+                distribution = [0.0, 1.0]
             else:
-                return Node ([1.0, 0.0], None, None)
+                distribution = [1.0, 0.0]
+
+            node = Node (distribution, None, None)
+            return node, 1, np.sum(valData[:,-1] == node.prediction)
 
         distribution = [class0 / len(data) , class1 / len(data)]
 
-        if (len(features) <= 0):
+        node = Node (distribution, None, None)
+        present_correct_preds = np.sum(valData[:,-1] == node.prediction)
+        if (len(features) <= 10):
             # Stop growing the tree and make this as Leaf node
-            return Node (distribution, None, None)
+            return node, 1, present_correct_preds
+            # return Node (distribution, None, None)
 
         # Grow the tree
+        correct_preds = 0
+        num_nodes = 0
         best_f = self.find_best_feature (data, features)
         features.remove(best_f)
         fv = self.features_values[best_f - 1]
         seperated_data = self.partition_data (data, best_f, fv)
+        seperated_val_data = self.partition_data (valData, best_f, fv)
 
         SubTree = Node (distribution, best_f, fv)
-        for sdata in seperated_data:
-            SubTree.add_child (self.grow_tree (sdata, features))
+        for sdata, svdata in zip(seperated_data, seperated_val_data):
+            childTree, nn, corr_pred = self.grow_tree (sdata, svdata, features)
+            num_nodes += nn
+            correct_preds += corr_pred
+            SubTree.add_child (childTree)
 
-        return SubTree
+        if (pruning is True and present_correct_preds >= correct_preds):
+            # Prune this subtree
+            # print ("Pruning: ", present_correct_preds, correct_preds, best_f)
+            return node, 1, present_correct_preds
+
+        return SubTree, num_nodes, correct_preds
 
     
     def find_best_feature (self, data, features):
