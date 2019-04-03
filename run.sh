@@ -7,7 +7,7 @@ if [ "$#" -lt 2 ]; then
 fi
 
 if [ "$1" -eq "1" ]; then
-    python3 Q1/model.py $2 $3 $4
+    python3 Q1/main.py $2 $3 $4
     exit 0
 elif [ "$1" -eq "2" ]; then
     python3 Q2/main.py $2 $3
