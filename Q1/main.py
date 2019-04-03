@@ -31,15 +31,15 @@ if __name__ == '__main__':
             
         start_time = time.time()
         DT = DecisionTree ()
-        Tree, num_nodes, correct_preds = DT.grow_tree (data, valData, features)
+        Tree, num_nodes, correct_preds, train_cps, test_cps = DT.grow_tree (data, valData, testData, features, pruning=False)
         end_time = time.time()
 
-        print (num_nodes, correct_preds)
+        print (num_nodes, correct_preds, train_cps, test_cps)
         print ("Time Taken: %.2f secs" % (end_time - start_time))
 
-        print ("Training Accuracy: %.2f %%" % (100 * DT.evaluate (Tree, data)))
-        print ("Validation Accuracy: %.2f %%" % (100 * DT.evaluate (Tree, valData)))
-        print ("Test Accuracy: %.2f %%" % (100 * DT.evaluate (Tree, testData)))
+        print ("Training Accuracy: %.2f %%" % (100 * train_cps / len(data)))
+        print ("Validation Accuracy: %.2f %%" % (100 * correct_preds / len(valData)))
+        print ("Test Accuracy: %.2f %%" % (100 * test_cps / len(testData)))
         # Tree.print_subtree (root=True)
 
     else:
