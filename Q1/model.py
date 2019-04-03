@@ -36,7 +36,7 @@ class DecisionTree:
         self.tree = None
         
 
-    def grow_tree (self, data, valData, testData, immutable_features, pruning=False):
+    def grow_tree (self, data, valData, testData, immutable_features, pruning=False, remainder=10):
         # Last col of data is Y
         # Find the distribution
         features = immutable_features.copy()
@@ -60,7 +60,7 @@ class DecisionTree:
         present_correct_preds = np.sum(valData[:,-1] == node.prediction)
         present_train_cps = np.sum(data[:,-1] == node.prediction)
         present_test_cps = np.sum(testData[:,-1] == node.prediction)
-        if (len(features) <= 0):
+        if (len(features) <= remainder):
             # Stop growing the tree and make this as Leaf node
             return node, 1, present_correct_preds, present_train_cps, present_test_cps
             # return Node (distribution, None, None)
@@ -79,7 +79,7 @@ class DecisionTree:
 
         SubTree = Node (distribution, best_f, fv)
         for sdata, svdata, stdata in zip(seperated_data, seperated_val_data, seperated_test_data):
-            childTree, nn, corr_pred, c_train_pred, c_test_pred = self.grow_tree (sdata, svdata, stdata, features, pruning=pruning)
+            childTree, nn, corr_pred, c_train_pred, c_test_pred = self.grow_tree (sdata, svdata, stdata, features, pruning=pruning, remainder=remainder)
             num_nodes += nn
             correct_preds += corr_pred
             correct_train_ps += c_train_pred
