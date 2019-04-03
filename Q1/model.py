@@ -32,7 +32,6 @@ class Node:
 
 class DecisionTree:
     def __init__(self):
-        # self.data = data
         self.features_values = self.feature_value_array()
         self.tree = None
         
@@ -41,7 +40,6 @@ class DecisionTree:
         # Last col of data is Y
         # Find the distribution
         features = immutable_features.copy()
-        # print (len(data), features)
         class0 = np.sum(data[:,-1] == 0)
         class1 = np.sum(data[:,-1] == 1)
         if (class0 == 0 or class1 == 0):
@@ -54,7 +52,6 @@ class DecisionTree:
                 return Node ([1.0, 0.0], None, None)
 
         distribution = [class0 / len(data) , class1 / len(data)]
-        # print (distribution)
 
         if (len(features) <= 0):
             # Stop growing the tree and make this as Leaf node
@@ -66,10 +63,8 @@ class DecisionTree:
         fv = self.features_values[best_f - 1]
         seperated_data = self.partition_data (data, best_f, fv)
 
-        # print (best_f, fv, len(data))
         SubTree = Node (distribution, best_f, fv)
         for sdata in seperated_data:
-            # print ("$", len(sdata))
             SubTree.add_child (self.grow_tree (sdata, features))
 
         return SubTree
@@ -79,12 +74,9 @@ class DecisionTree:
         class0 = np.sum(data[:,-1] == 0)
         class1 = np.sum(data[:,-1] == 1)
         distribution = [class0 / len(data) , class1 / len(data)]
-        # initial_entropy = self.calc_entropy (distribution)
-        # print (initial_entropy)
 
         fentropies = {}
         for f in features:
-            # print (f, end=' | ')
             fv = self.features_values[f - 1]
             entropy = 0
 
@@ -96,29 +88,17 @@ class DecisionTree:
                 classv1 = np.sum((data[:,f-1] == v) & (data[:,-1] == 1))
                 xprob = classv / len(data)
                 distribution = [classv0 / classv, classv1 / classv]
-                # print (distribution, classv0, classv1, classv, f, v)
 
                 entropy += xprob * self.calc_entropy (distribution)
-                # print (xprob, entropy, end=' | ')
-            # print (entropy)
             fentropies[f] = entropy
-        # print()
-        # fentropies = np.array(fentropies)
-        # print (fentropies)
-        # InformationGain = initial_entropy - fentropies
-        # print (InformationGain)
 
-        # print (np.argmax(InformationGain))
         best_f = min(fentropies, key=fentropies.get)
-        # print (best_f)
         return best_f
-        # return np.argmax(InformationGain) + 1
-        # return 1
 
     def evaluate (self, Tree, data):
         # Evaluate the tree on the dataset
-        correct_preds = self.evaluate_subtree (Tree, data)
-        print (correct_preds)
+        num_nodes, correct_preds = self.evaluate_subtree (Tree, data)
+        print (num_nodes, correct_preds)
 
         return correct_preds / len(data)
         
@@ -127,15 +107,18 @@ class DecisionTree:
         # Return number of correct predictions
         if (subtree.feature == None):
             # This is a leaf node
-            return np.sum(data[:,-1] == subtree.prediction)
+            return 1, np.sum(data[:,-1] == subtree.prediction)
 
         correct_preds = 0
+        num_nodes = 0
         seperated_data = self.partition_data (data, subtree.feature, subtree.fv)
         assert (len(seperated_data) == len(subtree.get_children()))
         for sdata, child in zip(seperated_data, subtree.get_children()):
-            correct_preds += self.evaluate_subtree (child, sdata)
+            nn, cp = self.evaluate_subtree (child, sdata)
+            num_nodes += nn
+            correct_preds += cp
 
-        return correct_preds
+        return num_nodes, correct_preds
 
 
     def partition_data (self, data, best_f, fv):
