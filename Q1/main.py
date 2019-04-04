@@ -6,9 +6,12 @@ The main controller
 import sys
 import time
 import numpy as np
-from read import preprocess_data, read_data
+import itertools
+from read import preprocess_data, read_data, read_cont_data
 from model import DecisionTree
 from plot import make_acc_curve
+
+from sklearn.tree import DecisionTreeClassifier
 
 if __name__ == '__main__':
     if (len(sys.argv) < 2):
@@ -56,6 +59,38 @@ if __name__ == '__main__':
             print ("Time Taken: %.2f secs" % (end_time - start_time))
 
         make_acc_curve (numNodes, trainAccuracies, valAccuracies, testAccuracies, fileName=fileName)
+
+    elif (part == 'c'):
+        # data = read_cont_data ('data/credit-card/credit-cards.train.csv')
+        # valData = read_cont_data ('data/credit-card/credit-cards.val.csv')
+        # testData = read_cont_data ('data/credit-card/credit-cards.test.csv')
+        data = read_data ('data/credit-card/credit-cards.train.processed')
+        valData = read_data ('data/credit-card/credit-cards.val.processed')
+        testData = read_data ('data/credit-card/credit-cards.test.processed')
+ 
+        maxAcc = 0
+        maxPara = None
+        max_depths = [1, 2, 5, 6, 7, 8, 9, 10]
+        min_samples_splits = [2, 3, 4]
+        min_samples_leafs = [1, 2, 5, 10, 30, 45, 50, 54, 55, 56, 57, 60]
+        for max_depth, min_samples_split, min_samples_leaf in list(itertools.product(*[max_depths, min_samples_splits, min_samples_leafs])):
+            clf = DecisionTreeClassifier(random_state=0, max_depth=max_depth, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf)
+            clf.fit (data[:,:-1],data[:,-1])
+            trainScore = 100 * clf.score (data[:,:-1], data[:,-1])
+            valScore = 100 * clf.score (valData[:,:-1], valData[:,-1])
+            testScore = 100 * clf.score (testData[:,:-1], testData[:,-1])
+            print ("%d %.3f %.3f %.3f" % (max_depth, trainScore, valScore, testScore))
+            if (valScore > maxAcc):
+                maxAcc = valScore
+                maxPara = (max_depth, min_samples_split, min_samples_leaf)
+        print (maxPara)
+        clf = DecisionTreeClassifier(random_state=0, max_depth=maxPara[0], min_samples_split=maxPara[1], min_samples_leaf=maxPara[2])
+        clf.fit (data[:,:-1],data[:,-1])
+        trainScore = 100 * clf.score (data[:,:-1], data[:,-1])
+        valScore = 100 * clf.score (valData[:,:-1], valData[:,-1])
+        testScore = 100 * clf.score (testData[:,:-1], testData[:,-1])
+        print ("%.3f %.3f %.3f" % (trainScore, valScore, testScore))
+
 
     elif (part == 't'):
         X = [0, 1, 2, 3, 4, 5]

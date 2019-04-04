@@ -16,6 +16,14 @@ def read_data (datafile):
     return data
     
 
+def read_cont_data (datafile):
+    # Read the unprocessed data
+    data = []
+    for line in tqdm(read_raw_data(datafile)):
+        data.append(line)
+    data = np.array(data)
+    return data
+
 def preprocess_data (datafile, outfile):
     data = []
     for line in tqdm(read_raw_data(datafile)):
