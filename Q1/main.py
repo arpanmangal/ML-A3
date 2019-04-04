@@ -15,20 +15,24 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 
 if __name__ == '__main__':
-    if (len(sys.argv) < 2):
+    if (len(sys.argv) < 5):
         print ("Go Away")
         exit(1)
 
     part = sys.argv[1]
-    if (part == 'a0'):
-        preprocess_data ('data/credit-card/credit-cards.val.csv', 'data/credit-card/credit-cards.val.processed')
-        preprocess_data ('data/credit-card/credit-cards.test.csv', 'data/credit-card/credit-cards.test.processed')
-        preprocess_data ('data/credit-card/credit-cards.train.csv', 'data/credit-card/credit-cards.train.processed')
+    trainFile = sys.argv[2]
+    testFile = sys.argv[3]
+    valFile = sys.argv[4]
 
-    elif (part == 'a' or part == 'b'):
-        data = read_data ('data/credit-card/credit-cards.train.processed')
-        valData = read_data ('data/credit-card/credit-cards.val.processed')
-        testData = read_data ('data/credit-card/credit-cards.test.processed')
+    # Preprocess
+    preprocess_data (trainFile,trainFile + '.processed')
+    preprocess_data (testFile,testFile + '.processed')
+    preprocess_data (valFile,valFile + '.processed')
+
+    if (part == '1' or part == '2'):
+        data = read_data (trainFile + '.processed')
+        valData = read_data (valFile + '.processed')
+        testData = read_data (testFile + '.processed')
         
         features = set()
         for x in range(1, 24):
@@ -39,8 +43,8 @@ if __name__ == '__main__':
         testAccuracies = []
         numNodes = []
         remainders = [r for r in range(23, -1, -1)]# [23, 20, 15, 10, 5, 0]
-        pruning = False if part == 'a' else True
-        fileName = "Q1/plots/accuracies.png" if part == 'a' else "Q1/plots/pruning.png"
+        pruning = False if part == '1' else True
+        fileName = "Q1/plots/accuracies.png" if part == '1' else "Q1/plots/pruning.png"
 
         for r in remainders:
             start_time = time.time()
@@ -56,15 +60,15 @@ if __name__ == '__main__':
             valAccuracies.append(valAcc)
             testAccuracies.append(ttAcc)
             numNodes.append(num_nodes)
-            print (num_nodes, "%.2f %.2f %.2f" % (trAcc, valAcc, ttAcc))
+            print (23-r, ' | ', num_nodes, "%.2f %.2f %.2f" % (trAcc, valAcc, ttAcc))
             print ("Time Taken: %.2f secs" % (end_time - start_time))
 
         make_acc_curve (numNodes, trainAccuracies, valAccuracies, testAccuracies, fileName=fileName)
 
-    elif (part == 'c'):
-        data = read_cont_data ('data/credit-card/credit-cards.train.csv')
-        valData = read_cont_data ('data/credit-card/credit-cards.val.csv')
-        testData = read_cont_data ('data/credit-card/credit-cards.test.csv')
+    elif (part == '3'):
+        data = read_cont_data (trainFile)
+        valData = read_cont_data (valFile)
+        testData = read_cont_data (testFile)
         
         features = set()
         for x in range(1, 24):
@@ -92,23 +96,23 @@ if __name__ == '__main__':
             valAccuracies.append(valAcc)
             testAccuracies.append(ttAcc)
             numNodes.append(num_nodes)
-            print (num_nodes, "%.2f %.2f %.2f" % (trAcc, valAcc, ttAcc))
+            print (d, ' | ', num_nodes, "%.2f %.2f %.2f" % (trAcc, valAcc, ttAcc))
             print ("Time Taken: %.2f secs" % (end_time - start_time))
 
         make_acc_curve (numNodes, trainAccuracies, valAccuracies, testAccuracies, fileName=fileName)
 
 
 
-    elif (part == 'd' or part == 'e'):
-        if (part == 'd'):
-            data = read_data ('data/credit-card/credit-cards.train.processed')
-            valData = read_data ('data/credit-card/credit-cards.val.processed')
-            testData = read_data ('data/credit-card/credit-cards.test.processed')
+    elif (part == '4' or part == '5'):
+        if (part == '4'):
+            data = read_data (trainFile + '.processed')
+            valData = read_data (valFile + '.processed')
+            testData = read_data (testFile + '.processed')
         else:
             # Sparsity <= one-hot
-            data = one_hot_data ('data/credit-card/credit-cards.train.processed')
-            valData = one_hot_data ('data/credit-card/credit-cards.val.processed')
-            testData = one_hot_data ('data/credit-card/credit-cards.test.processed')
+            data = one_hot_data (trainFile)
+            valData = one_hot_data (valFile)
+            testData = one_hot_data (testFile)
  
         maxAcc = 0
         maxPara = None
@@ -135,10 +139,10 @@ if __name__ == '__main__':
         print ("%.3f %.3f %.3f" % (trainScore, valScore, testScore))
 
 
-    elif (part == 'f'):
-        data = read_data ('data/credit-card/credit-cards.train.processed')
-        valData = read_data ('data/credit-card/credit-cards.val.processed')
-        testData = read_data ('data/credit-card/credit-cards.test.processed')
+    elif (part == '6'):
+        data = read_data (trainFile)
+        valData = read_data (valFile)
+        testData = read_data (testFile)
         
         maxAcc = 0
         maxPara = None
