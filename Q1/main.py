@@ -12,6 +12,7 @@ from model import DecisionTree
 from plot import make_acc_curve
 
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 if __name__ == '__main__':
     if (len(sys.argv) < 2):
@@ -67,6 +68,7 @@ if __name__ == '__main__':
             valData = read_data ('data/credit-card/credit-cards.val.processed')
             testData = read_data ('data/credit-card/credit-cards.test.processed')
         else:
+            # Sparsity <= one-hot
             data = one_hot_data ('data/credit-card/credit-cards.train.processed')
             valData = one_hot_data ('data/credit-card/credit-cards.val.processed')
             testData = one_hot_data ('data/credit-card/credit-cards.test.processed')
@@ -82,10 +84,11 @@ if __name__ == '__main__':
             trainScore = 100 * clf.score (data[:,:-1], data[:,-1])
             valScore = 100 * clf.score (valData[:,:-1], valData[:,-1])
             testScore = 100 * clf.score (testData[:,:-1], testData[:,-1])
-            print ("%d %.3f %.3f %.3f" % (max_depth, trainScore, valScore, testScore))
+            print ("%d %d %d | %.3f %.3f %.3f" % (max_depth, min_samples_split, min_samples_leaf, trainScore, valScore, testScore))
             if (valScore > maxAcc):
                 maxAcc = valScore
                 maxPara = (max_depth, min_samples_split, min_samples_leaf)
+        
         print (maxPara)
         clf = DecisionTreeClassifier(random_state=0, max_depth=maxPara[0], min_samples_split=maxPara[1], min_samples_leaf=maxPara[2])
         clf.fit (data[:,:-1],data[:,-1])
@@ -93,6 +96,41 @@ if __name__ == '__main__':
         valScore = 100 * clf.score (valData[:,:-1], valData[:,-1])
         testScore = 100 * clf.score (testData[:,:-1], testData[:,-1])
         print ("%.3f %.3f %.3f" % (trainScore, valScore, testScore))
+
+
+    elif (part == 'f'):
+        data = read_data ('data/credit-card/credit-cards.train.processed')
+        valData = read_data ('data/credit-card/credit-cards.val.processed')
+        testData = read_data ('data/credit-card/credit-cards.test.processed')
+        # data = one_hot_data ('data/credit-card/credit-cards.train.processed')
+        # valData = one_hot_data ('data/credit-card/credit-cards.val.processed')
+        # testData = one_hot_data ('data/credit-card/credit-cards.test.processed')
+        
+        maxAcc = 0
+        maxPara = None
+        n_estimators = [5, 6, 7, 8, 10]
+        max_features = [0.2, 0.4, 0.5, 0.6, 0.7, 0.8]
+        bootstraps = [True, False]
+        max_depths = [2, 3, 4, 5, 6]
+
+        for n_est, max_f, bootstrap, max_depth in list (itertools.product(*[n_estimators, max_features, bootstraps, max_depths])):
+            clf = RandomForestClassifier (n_estimators=n_est, max_features=max_f, bootstrap=bootstrap, max_depth=max_depth, random_state=0)
+            clf.fit (data[:,:-1], data[:,-1])
+            trainScore = 100 * clf.score (data[:,:-1], data[:,-1])
+            valScore = 100 * clf.score (valData[:,:-1], valData[:,-1])
+            testScore = 100 * clf.score (testData[:,:-1], testData[:,-1])
+            print ("%d %d %d %d | %.3f %.3f %.3f" % (n_est, max_f, bootstrap, max_depth, trainScore, valScore, testScore)) 
+            if (valScore > maxAcc):
+                maxAcc = valScore
+                maxPara = (n_est, max_f, bootstrap, max_depth)
+
+        print (maxPara)
+        clf = RandomForestClassifier (n_estimators=maxPara[0], max_features=maxPara[1], bootstrap=maxPara[2], max_depth=maxPara[3], random_state=0)
+        clf.fit (data[:,:-1], data[:,-1])
+        trainScore = 100 * clf.score (data[:,:-1], data[:,-1])
+        valScore = 100 * clf.score (valData[:,:-1], valData[:,-1])
+        testScore = 100 * clf.score (testData[:,:-1], testData[:,-1])
+        print ("%.3f %.3f %.3f" % (trainScore, valScore, testScore)) 
 
     elif (part == 't'):
         X = [0, 1, 2, 3, 4, 5]
