@@ -62,6 +62,43 @@ if __name__ == '__main__':
         make_acc_curve (numNodes, trainAccuracies, valAccuracies, testAccuracies, fileName=fileName)
 
 
+    elif (part == 'c'):
+        data = read_cont_data ('data/credit-card/credit-cards.train.csv')
+        valData = read_cont_data ('data/credit-card/credit-cards.val.csv')
+        testData = read_cont_data ('data/credit-card/credit-cards.test.csv')
+
+        features = set()
+        for x in range(1, 24):
+            features.add(x)
+
+        trainAccuracies = []
+        valAccuracies = []
+        testAccuracies = []
+        numNodes = []
+        depths = [0, 2, 4, 6, 8, 10, 12, 16, 20]
+        pruning = False
+        fileName = "Q1/plots/continuous.png"
+
+        for d in depths:
+            start_time = time.time()
+            DT = DecisionTree ()
+            Tree, num_nodes, correct_preds, train_cps, test_cps = DT.grow_tree (data, valData, testData, features, continuous=True, depth=d)
+            end_time = time.time()
+
+            trAcc = 100 * train_cps / len(data)
+            valAcc = 100 * correct_preds / len(valData)
+            ttAcc = 100 * test_cps / len(testData)
+
+            trainAccuracies.append(trAcc)
+            valAccuracies.append(valAcc)
+            testAccuracies.append(ttAcc)
+            numNodes.append(num_nodes)
+            print (num_nodes, "%.2f %.2f %.2f" % (trAcc, valAcc, ttAcc))
+            print ("Time Taken: %.2f secs" % (end_time - start_time))
+
+        make_acc_curve (numNodes, trainAccuracies, valAccuracies, testAccuracies, fileName=fileName)
+
+
     elif (part == 'd' or part == 'e'):
         if (part == 'd'):
             data = read_data ('data/credit-card/credit-cards.train.processed')

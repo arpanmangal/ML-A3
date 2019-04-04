@@ -36,7 +36,7 @@ class DecisionTree:
         self.tree = None
         
 
-    def grow_tree (self, data, valData, testData, immutable_features, pruning=False, remainder=10):
+    def grow_tree (self, data, valData, testData, immutable_features, pruning=False, remainder=10, continuous=False, depth=5):
         # Last col of data is Y
         # Find the distribution
         features = immutable_features.copy()
@@ -60,7 +60,7 @@ class DecisionTree:
         present_correct_preds = np.sum(valData[:,-1] == node.prediction)
         present_train_cps = np.sum(data[:,-1] == node.prediction)
         present_test_cps = np.sum(testData[:,-1] == node.prediction)
-        if (len(features) <= remainder):
+        if ((not continuous and len(features) <= remainder) or (continuous and depth == 0)):
             # Stop growing the tree and make this as Leaf node
             return node, 1, present_correct_preds, present_train_cps, present_test_cps
             # return Node (distribution, None, None)
@@ -70,16 +70,17 @@ class DecisionTree:
         correct_train_ps = 0
         correct_test_ps = 0
         num_nodes = 0
-        best_f = self.find_best_feature (data, features)
-        features.remove(best_f)
+        best_f = self.find_best_feature (data, features, continuous)
+        if (not continuous):
+            features.remove(best_f)
         fv = self.features_values[best_f - 1]
-        seperated_data = self.partition_data (data, best_f, fv)
-        seperated_val_data = self.partition_data (valData, best_f, fv)
-        seperated_test_data = self.partition_data (testData, best_f, fv)
+        seperated_data = self.partition_data (data, best_f, fv, continuous)
+        seperated_val_data = self.partition_data (valData, best_f, fv, continuous)
+        seperated_test_data = self.partition_data (testData, best_f, fv, continuous)
 
         SubTree = Node (distribution, best_f, fv)
         for sdata, svdata, stdata in zip(seperated_data, seperated_val_data, seperated_test_data):
-            childTree, nn, corr_pred, c_train_pred, c_test_pred = self.grow_tree (sdata, svdata, stdata, features, pruning=pruning, remainder=remainder)
+            childTree, nn, corr_pred, c_train_pred, c_test_pred = self.grow_tree (sdata, svdata, stdata, features, pruning=pruning, remainder=remainder, continuous=continuous, depth=depth-1)
             num_nodes += nn
             correct_preds += corr_pred
             correct_train_ps += c_train_pred
@@ -94,7 +95,7 @@ class DecisionTree:
         return SubTree, num_nodes, correct_preds, correct_train_ps, correct_test_ps
 
     
-    def find_best_feature (self, data, features):
+    def find_best_feature (self, data, features, continuous):
         class0 = np.sum(data[:,-1] == 0)
         class1 = np.sum(data[:,-1] == 1)
         distribution = [class0 / len(data) , class1 / len(data)]
@@ -105,13 +106,24 @@ class DecisionTree:
             entropy = 0
 
             for v in fv:
-                classv = np.sum(data[:,f-1] == v)
-                if (classv == 0):
-                    continue
-                classv0 = np.sum((data[:,f-1] == v) & (data[:,-1] == 0))
-                classv1 = np.sum((data[:,f-1] == v) & (data[:,-1] == 1))
-                xprob = classv / len(data)
-                distribution = [classv0 / classv, classv1 / classv]
+                if continuous and ((f == 1) or (f == 5) or (f >= 12 and f <= 23)):
+                    median = np.median(data[:,f-1])
+                    dat = (data[:,f-1] > median).astype(int)
+                    classv = np.sum(dat ==  v)
+                    if (classv == 0):
+                        continue
+                    classv0 = np.sum((dat == v) & (data[:,-1] == 0))
+                    classv1 = np.sum((dat == v) & (data[:,-1] == 1))
+                    xprob = classv / len(data)
+                    distribution = [classv0 / classv, classv1 / classv]
+                else:
+                    classv = np.sum(data[:,f-1] == v)
+                    if (classv == 0):
+                        continue
+                    classv0 = np.sum((data[:,f-1] == v) & (data[:,-1] == 0))
+                    classv1 = np.sum((data[:,f-1] == v) & (data[:,-1] == 1))
+                    xprob = classv / len(data)
+                    distribution = [classv0 / classv, classv1 / classv]
 
                 entropy += xprob * self.calc_entropy (distribution)
             fentropies[f] = entropy
@@ -119,37 +131,25 @@ class DecisionTree:
         best_f = min(fentropies, key=fentropies.get)
         return best_f
 
-    def evaluate (self, Tree, data):
-        # Evaluate the tree on the dataset
-        num_nodes, correct_preds = self.evaluate_subtree (Tree, data)
-        print (num_nodes, correct_preds)
 
-        return correct_preds / len(data)
-        
-
-    def evaluate_subtree (self, subtree, data):
-        # Return number of correct predictions
-        if (subtree.feature == None):
-            # This is a leaf node
-            return 1, np.sum(data[:,-1] == subtree.prediction)
-
-        correct_preds = 0
-        num_nodes = 0
-        seperated_data = self.partition_data (data, subtree.feature, subtree.fv)
-        assert (len(seperated_data) == len(subtree.get_children()))
-        for sdata, child in zip(seperated_data, subtree.get_children()):
-            nn, cp = self.evaluate_subtree (child, sdata)
-            num_nodes += nn
-            correct_preds += cp
-
-        return num_nodes, correct_preds
-
-
-    def partition_data (self, data, best_f, fv):
+    def partition_data (self, data, best_f, fv, continuous):
         # Partition the data based on best_f for it's various fv
         seperated_data = []
+        if (len(data) == 0):
+            for fvals in fv:
+                condition = (data[:,best_f-1] == fvals)
+                sdata = data[condition]
+                seperated_data.append(sdata)
+            return seperated_data
+
         for fvals in fv:
-            condition = (data[:,best_f-1] == fvals)
+            if continuous and ((best_f == 1) or (best_f == 5) or (best_f >= 12 and best_f <= 23)):
+                median = np.median(data[:,best_f-1])
+                dat = (data[:,best_f-1] > median).astype(int)
+                condition = (dat == fvals)
+            else:
+                condition = (data[:,best_f-1] == fvals)    
+            # condition = (data[:,best_f-1] == fvals)
             sdata = data[condition]
             seperated_data.append(sdata)
         return seperated_data
