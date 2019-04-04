@@ -139,7 +139,14 @@ class DecisionTree:
         #     mData = (data[:,best_f-1] > median).astype(int)
         # else:
         #     mData = data
+        # if (len(data) == 0):
+        #     return seperated_data
+
         if (len(data) == 0):
+            for fvals in fv:
+                condition = (data[:,best_f-1] == fvals)
+                sdata = data[condition]
+                seperated_data.append(sdata)
             return seperated_data
 
         for fvals in fv:
