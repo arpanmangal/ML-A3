@@ -7,7 +7,7 @@ import sys
 import time
 import numpy as np
 import itertools
-from read import preprocess_data, read_data, read_cont_data
+from read import preprocess_data, read_data, read_cont_data, one_hot_data
 from model import DecisionTree
 from plot import make_acc_curve
 
@@ -60,19 +60,22 @@ if __name__ == '__main__':
 
         make_acc_curve (numNodes, trainAccuracies, valAccuracies, testAccuracies, fileName=fileName)
 
-    elif (part == 'c'):
-        # data = read_cont_data ('data/credit-card/credit-cards.train.csv')
-        # valData = read_cont_data ('data/credit-card/credit-cards.val.csv')
-        # testData = read_cont_data ('data/credit-card/credit-cards.test.csv')
-        data = read_data ('data/credit-card/credit-cards.train.processed')
-        valData = read_data ('data/credit-card/credit-cards.val.processed')
-        testData = read_data ('data/credit-card/credit-cards.test.processed')
+
+    elif (part == 'd' or part == 'e'):
+        if (part == 'd'):
+            data = read_data ('data/credit-card/credit-cards.train.processed')
+            valData = read_data ('data/credit-card/credit-cards.val.processed')
+            testData = read_data ('data/credit-card/credit-cards.test.processed')
+        else:
+            data = one_hot_data ('data/credit-card/credit-cards.train.processed')
+            valData = one_hot_data ('data/credit-card/credit-cards.val.processed')
+            testData = one_hot_data ('data/credit-card/credit-cards.test.processed')
  
         maxAcc = 0
         maxPara = None
-        max_depths = [1, 2, 5, 6, 7, 8, 9, 10]
+        max_depths = [1, 5, 6, 7, 8, 9]
         min_samples_splits = [2, 3, 4]
-        min_samples_leafs = [1, 2, 5, 10, 30, 45, 50, 54, 55, 56, 57, 60]
+        min_samples_leafs = [1, 5, 20, 50, 54, 55, 56, 57, 59, 60, 61, 62]
         for max_depth, min_samples_split, min_samples_leaf in list(itertools.product(*[max_depths, min_samples_splits, min_samples_leafs])):
             clf = DecisionTreeClassifier(random_state=0, max_depth=max_depth, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf)
             clf.fit (data[:,:-1],data[:,-1])
@@ -90,7 +93,6 @@ if __name__ == '__main__':
         valScore = 100 * clf.score (valData[:,:-1], valData[:,-1])
         testScore = 100 * clf.score (testData[:,:-1], testData[:,-1])
         print ("%.3f %.3f %.3f" % (trainScore, valScore, testScore))
-
 
     elif (part == 't'):
         X = [0, 1, 2, 3, 4, 5]
