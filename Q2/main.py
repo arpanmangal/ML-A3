@@ -34,14 +34,15 @@ def evaluate_model (NNet, data, print_accuracy=True, conf_matrix=True, savePath=
         
 
 if __name__ == '__main__':
+    print (sys.argv)
     if (len(sys.argv) < 2):
         print ("Go Away")
         exit(1)
 
-    if (sys.argv[1] == 'a'):
+    if (sys.argv[1] == 'p'):
         # Convert to the one-hot encoding
-        gen_one_hot_data ('data/poker/poker-hand-training.data', 'data/poker/train.data')
-        gen_one_hot_data ('data/poker/poker-hand-testing.data', 'data/poker/test.data')
+        gen_one_hot_data (sys.argv[2], sys.argv[3]) #  'data/poker/poker-hand-training.data', 'data/poker/train.data')
+        gen_one_hot_data (sys.argv[4], sys.argv[5]) # 'data/poker/poker-hand-testing.data', 'data/poker/test.data')
 
     elif (sys.argv[1] == 'b'):
         # Read the data
@@ -77,7 +78,7 @@ if __name__ == '__main__':
             # Train the neural network
             start_time = time.time()
             NNet = NNetwork (85, [size], 10, 1)
-            accuracies, losses = NNet.train(trainData, 0.1, silent=True)
+            accuracies, losses = NNet.train(trainData, 0.1, silent=False)
             trainingTimes.append(time.time() - start_time)
             print ("Size %d done | Time Take: %.2f secs" % (size, time.time() -start_time))
 
@@ -200,10 +201,40 @@ if __name__ == '__main__':
 
     elif (sys.argv[1] == 't'):
         # make_line_curve ([10,2,-4,4,5,2], marker='m-', miny=2, maxy=4)
-        
+        # For testing the plot function
         hidden_units = [5, 10, 15, 20, 25]
         trainAccuracies = [43.00279888044783, 46.0375849660136, 49.95201919232307, 49.8360655737705, 47.76489404238305]
         make_line_curve (trainAccuracies, X=hidden_units, Xlabel="Hidden Layer Size", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartCTrainAcc.png", title="Training Accuracy vs. Size of Hidden Layer", miny=0, maxy=100)
+
+    elif (sys.argv[1] == 'nn'):
+        # Read from the file the nn architecture
+        afile = open(sys.argv[2], 'r')
+        inSize = int(afile.readline())
+        outSize = int(afile.readline())
+        batchSize = int(afile.readline())
+        H = int(afile.readline())
+        sizes = [int(s) for s in  afile.readline().strip('\n').split(' ')]
+        useRELU = (afile.readline().strip('\n')) == 'relu'
+        adaptive_eta = (afile.readline().strip('\n')) == 'variable'
+
+        print (inSize, outSize, batchSize, H, sizes, useRELU, adaptive_eta)
+        # exit(0)
+        # Read the data
+        data = read_one_hot_data (sys.argv[3])
+        testData = read_one_hot_data (sys.argv[4])
+
+        # Train the neural network
+        start_time = time.time()
+        NNet = NNetwork (inSize, sizes, outSize, batchSize, useRELU=useRELU)
+        accuracies, losses = NNet.train(data, 0.1, adaptive_eta=adaptive_eta)
+        print ("Training time: %.2f secs" % (time.time() - start_time))
+
+        make_line_curve (accuracies, Xlabel="Epochs", Ylabel="Accuracy (%)", marker='b-', fileName="Q2/plots/PartNN/accuracy.png", title="Accuracy vs. #Epochs", miny=0, maxy=100)
+        make_line_curve (losses[1:], Xlabel="Epochs", Ylabel="Loss", marker='m-', fileName="Q2/plots/PartNN/loss.png", title="Loss vs. #Epochs", miny=0)
+
+        evaluate_model (NNet, testData, savePath="Q2/plots/PartNN/confusionMatrixTest.png")
+        evaluate_model (NNet, data, savePath="Q2/plots/PartNN/confusionMatrixTrain.png")
+
 
     else:
         print ("Go Away")
