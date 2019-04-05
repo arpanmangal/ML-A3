@@ -18,6 +18,7 @@ class NNetwork:
         self.biases = [np.random.randn(currSize, 1) for currSize in self.sizes[1:]]
         self.weights = [np.random.randn(currSize, prevSize) for currSize, prevSize in zip(self.sizes[1:], self.sizes[:-1])]
         
+        np.random.seed(0)
 
     def predict (self, data):
         def predict_single (x):

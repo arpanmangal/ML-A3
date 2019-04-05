@@ -113,7 +113,7 @@ if __name__ == '__main__':
             # Train the neural network
             start_time = time.time()
             NNet = NNetwork (85, size, 10, 1)
-            accuracies, losses = NNet.train(trainData, 0.1, silent=True)
+            accuracies, losses = NNet.train(trainData, 0.1, max_epochs=200, silent=False)
             trainingTimes.append(time.time() - start_time)
             print ("Size %d done | Time Take: %.2f secs" % (size[0], time.time() -start_time))
 
@@ -133,7 +133,7 @@ if __name__ == '__main__':
 
     elif (sys.argv[1] == 'e'):
         eta = 0.1
-        hidden_units = [[x,x] for x in [10, 20]]
+        hidden_units = [[x] for x in [5, 10, 15, 20, 25]]
 
         # Read the data
         trainData = read_one_hot_data ('data/poker/train.data')
@@ -167,7 +167,7 @@ if __name__ == '__main__':
     
     elif (sys.argv[1] == 'f'):
         eta = 0.1
-        hidden_units = [[x,x] for x in [10, 20]]
+        hidden_units = [[x] for x in [5, 10, 15, 20, 25]]
 
         # Read the data
         trainData = read_one_hot_data ('data/poker/train.data')
@@ -185,7 +185,7 @@ if __name__ == '__main__':
             trainingTimes.append(time.time() - start_time)
             print ("Size %d done | Time Take: %.2f secs" % (size[0], time.time() -start_time))
 
-            save_conf_matrix = "Q2/plots/PartF/confMatrix-e-" + str(size[0])
+            save_conf_matrix = "Q2/plots/PartF/confMatrix-f-" + str(size[0])
             trainAcc = evaluate_model (NNet, trainData, conf_matrix=False, savePath=save_conf_matrix)
             testAcc = evaluate_model (NNet, testData, savePath=save_conf_matrix)
             trainAccuracies.append(trainAcc)
