@@ -27,9 +27,12 @@ class NNetwork:
 
     def feedforward (self, a):
         # Run the neural network on the input and reuturn the output
-        for b, w in zip(self.biases, self.weights):
+        for b, w in zip(self.biases[:-1], self.weights[:-1]):
             z = np.matmul(w, a) + b
-            a = self.sigmoid(z)
+            a = self.sigmoid(z, False)
+        for b, w in zip(self.biases[-1:], self.weights[-1:]):
+            z = np.matmul(w, a) + b
+            a = self.sigmoid(z, True)
         return a
 
 
@@ -89,20 +92,25 @@ class NNetwork:
             azs = [] # Set of a's
             a = x
             azs.append(a)
-            for b, w in zip(self.biases, self.weights):
+            for b, w in zip(self.biases[:-1], self.weights[:-1]):
                 z = np.matmul(w, a) + b
                 zs.append(z)
-                a = self.sigmoid(z)
+                a = self.sigmoid(z, False)
+                azs.append (a)
+            for b, w in zip(self.biases[-1:], self.weights[-1:]):
+                z = np.matmul(w, a) + b
+                zs.append(z)
+                a = self.sigmoid(z, True)
                 azs.append (a)
 
             # Do a backpropogate
             gradient_C = (a - y)
-            delta = np.multiply (gradient_C, self.sigmoid_prime(zs[-1]))
+            delta = np.multiply (gradient_C, self.sigmoid_prime(zs[-1], True))
             del_biases[-1] += delta
             del_weights[-1] += np.matmul (delta, azs[-2].transpose())
 
             for l in range (2, self.L + 1):
-                sp = self.sigmoid_prime(zs[-l])
+                sp = self.sigmoid_prime(zs[-l], False)
                 delta = np.matmul (self.weights[-l + 1].transpose(), delta) * sp
                 del_biases[-l] += delta
                 del_weights[-l] += np.matmul ( delta, azs[-l-1].transpose() )
@@ -133,16 +141,16 @@ class NNetwork:
         return loss / (2 * len(data))
 
     # Helper Functions
-    def sigmoid (self, z):
-        if (self.useRELU):
+    def sigmoid (self, z, lastLayer):
+        if (self.useRELU and not lastLayer):
             return np.maximum(0, z)
         else:
             return 1.0 / (1.0 + np.exp(-z))
 
-    def sigmoid_prime (self, z):
-        if (self.useRELU):
+    def sigmoid_prime (self, z, lastLayer):
+        if (self.useRELU and not lastLayer):
             return (z > 0).astype(int)
         else:
-            sig = self.sigmoid (z)
+            sig = self.sigmoid (z, lastLayer)
             sp = np.multiply(sig, 1-sig)
             return sp
